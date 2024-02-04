@@ -24,7 +24,7 @@ jobs:
           EOF
 
       - name: Run TruffleHog on the entire repo
-        uses: docker://trufflesecurity/trufflehog:v3.0.0
+        uses: docker://trufflesecurity/trufflehog:3.67.0
         with:
           args: trufflehog file://$(pwd) --format=json --output-path trufflehog_report.json --rules custom_rules.json
 
