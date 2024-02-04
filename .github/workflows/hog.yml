@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
   test:
@@ -10,8 +11,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 0 # This ensures the entire git history is checked out
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@main
       with:
-        extra_args: --only-verified
+        extra_args: --only-verified # Customize this according to your needs
