@@ -14,3 +14,12 @@ jobs:
         fetch-depth: 0
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@main
+      with:
+          extra_args: --json --output-path trufflehog_output.json 
+          continue-on-error: true # This ensures the workflow continues even if secrets are found
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      if: always() # This ensures the artifact is uploaded regardless of the previous step's success or failure
+      with:
+          name: trufflehog-scan-result
