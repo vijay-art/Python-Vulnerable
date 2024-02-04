@@ -2,24 +2,34 @@ on:
   push:
     branches:
       - main
-  pull_request:
-
 jobs:
-  test:
+  trufflehog_scan:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Secret Scanning
-      uses: trufflesecurity/trufflehog@main
-      with:
-          extra_args: --json --output-path trufflehog_output.json 
-          continue-on-error: true # This ensures the workflow continues even if secrets are found
+      - name: Checkout full git history
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0' # Fetch all history
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      if: always() # This ensures the artifact is uploaded regardless of the previous step's success or failure
-      with:
-          name: trufflehog-scan-result
+      - name: Create custom rules file
+        run: |
+          cat <<EOF > custom_rules.json
+          {
+            "API Key": "[A-Za-z0-9]{32,45}",
+            "Generic Token": "[A-Za-z0-9._-]{35,}",
+            "Basic Auth Credential": "Basic [A-Za-z0-9+/=]{6,}",
+            "Bearer Token": "Bearer [A-Za-z0-9._-]{7,}",
+            "Generic Secret": "[A-Za-z0-9]{40,}"
+          }
+          EOF
+
+      - name: Run TruffleHog on the entire repo
+        uses: docker://trufflesecurity/trufflehog:v3.0.0
+        with:
+          args: trufflehog file://$(pwd) --format=json --output-path trufflehog_report.json --rules custom_rules.json
+
+      - name: Upload TruffleHog report as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: trufflehog-report
+          path: trufflehog_report.json
